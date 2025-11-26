@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unusual Charts</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <style>
+        :root {
+            --bg-color: #15181e;
+            --sidebar-bg: #1a1c23;
+            --card-bg: #1a1c23;
+            --text-main: #fcfbff;
+            --text-muted: #7d89a7;
+            --accent-primary: #2471a5;
+            /* Blue */
+            --accent-secondary: #e83e8c;
+            /* Pink */
+            --logo-text: #c6dff1;
+            --btn-gradient-start: #2471a5;
+            --btn-gradient-end: #53a5d5;
+            --border-color: #24272e;
+            --input-bg: #0f1115;
+            --hover-bg: #24272e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            /* Prevent body scroll, use containers */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        /* Header */
+        header {
+            height: 60px;
+            background-color: var(--sidebar-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--logo-text);
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar Filters */
+        .sidebar {
+            width: 300px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        input[type="text"],
+        input[type="date"] {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus {
+            border-color: var(--accent-primary);
+        }
+
+        .btn {
+            background: linear-gradient(to right top, var(--btn-gradient-start), var(--btn-gradient-end));
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--hover-bg);
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* Chart Card */
+        .chart-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-primary);
+        }
+
+        .card-image-container {
+            width: 100%;
+            height: 200px;
+            background-color: #000;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* or contain, depending on preference. Cover looks better for grid */
+            transition: opacity 0.2s;
+        }
+
+        .card-image:hover {
+            opacity: 0.8;
+        }
+
+        .card-details {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ticker {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .tag:hover {
+            background-color: var(--accent-secondary);
+            color: #fff;
+        }
+
+        .add-tag-form {
+            display: flex;
+            gap: 5px;
+            margin-top: auto;
+        }
+
+        .add-tag-input {
+            flex: 1;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .add-tag-btn {
+            background-color: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .add-tag-btn:hover {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: calc(100% - 160px);
+            max-height: 90vh;
+            gap: 15px;
+            position: relative;
+            z-index: 1001;
+        }
+
+        .modal-content {
+            max-width: 100%;
+            max-height: calc(90vh - 40px);
+            /* Account for date and gap */
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(36, 113, 165, 0.4);
+        }
+
+        .modal-date {
+            color: var(--text-main);
+            font-size: 1.1rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 1003;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .close-modal:hover {
+            color: var(--accent-primary);
+            transform: scale(1.1);
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            top: 28px;
+            right: 70px;
+            color: #fff;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            z-index: 1003;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .fullscreen-btn:hover {
+            color: var(--accent-primary);
+            transform: scale(1.1);
+        }
+
+        .fullscreen-btn svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2.5;
+        }
+
+        .modal-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: background 0.2s, transform 0.2s;
+            z-index: 1002;
+            user-select: none;
+        }
+
+        .modal-nav-btn:hover {
+            background: rgba(36, 113, 165, 0.8);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .prev-btn {
+            left: 30px;
+        }
+
+        .next-btn {
+            right: 30px;
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background-color: var(--input-bg);
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background-color: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        input[type="checkbox"]:checked+.toggle-switch {
+            background-color: var(--accent-primary);
+        }
+
+        input[type="checkbox"]:checked+.toggle-switch::after {
+            transform: translateX(20px);
+        }
+
+        input[type="checkbox"] {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <img src="/static/images/logo.png" alt="Logo" style="height: 32px; width: auto;">
+            Unusual Charts
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <div class="toggle-container" onclick="document.getElementById('latestToggle').click()">
+                <span style="font-size: 0.9rem; color: var(--text-muted);">Latest Only</span>
+                <input type="checkbox" id="latestToggle" checked onchange="fetchCharts()">
+                <div class="toggle-switch"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="filter-group">
+                <label class="filter-label">Search Ticker</label>
+                <input type="text" id="tickerInput" placeholder="e.g. SPY" onkeyup="debounceFetch()">
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Tags (comma separated)</label>
+                <input type="text" id="tagsInput" placeholder="e.g. breakout, gap" onkeyup="debounceFetch()">
+                <div style="display: flex; gap: 15px; margin-top: 5px;">
+                    <label
+                        style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+                        <input type="radio" name="tagOperator" value="OR" checked onchange="fetchCharts()"
+                            style="display: block;"> Any
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+                        <input type="radio" name="tagOperator" value="AND" onchange="fetchCharts()"
+                            style="display: block;"> All
+                    </label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Time Period</label>
+                <select id="periodInput" onchange="fetchCharts()"
+                    style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 6px; font-family: inherit; font-size: 0.9rem; outline: none; width: 100%;">
+                    <option value="">All Periods</option>
+                    <option value="1 min">1 Min</option>
+                    <option value="Daily">Daily</option>
+                    <option value="Weekly">Weekly</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="10 Min">10 Min</option>
+                    <option value="60 Min">60 Min</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Date Range</label>
+                <input type="date" id="dateStart" onchange="fetchCharts()">
+                <input type="date" id="dateEnd" onchange="fetchCharts()">
+            </div>
+
+
+            <button class="btn" onclick="fetchCharts()">Apply Filters</button>
+            <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
+        </aside>
+
+        <main class="content">
+            <div id="chartsGrid" class="charts-grid">
+                <!-- Charts will be injected here -->
+            </div>
+        </main>
+    </div>
+
+    <div id="imageModal" class="modal" onclick="closeModal(event)">
+        <button class="fullscreen-btn" onclick="toggleFullScreen(event)" title="Toggle Fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+            </svg>
+        </button>
+        <span class="close-modal" onclick="closeModal(event)">&times;</span>
+        <button class="modal-nav-btn prev-btn" onclick="changeChart(-1, event)">&#10094;</button>
+        <div class="modal-wrapper">
+            <img id="modalImage" class="modal-content" src="" alt="Full Chart">
+            <div id="modalDate" class="modal-date"></div>
+        </div>
+        <button class="modal-nav-btn next-btn" onclick="changeChart(1, event)">&#10095;</button>
+    </div>
+
+    <script>
+        let debounceTimer;
+        let currentCharts = [];
+        let currentChartIndex = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchCharts();
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (!document.getElementById('imageModal').classList.contains('active')) return;
+
+                if (e.key === 'ArrowLeft') {
+                    changeChart(-1);
+                } else if (e.key === 'ArrowRight') {
+                    changeChart(1);
+                } else if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+        });
+
+        function debounceFetch() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(fetchCharts, 500);
+        }
+
+        function resetFilters() {
+            document.getElementById('tickerInput').value = '';
+            document.getElementById('tagsInput').value = '';
+            document.getElementById('periodInput').value = '';
+            document.getElementById('dateStart').value = '';
+            document.getElementById('dateEnd').value = '';
+            document.getElementById('latestToggle').checked = true;
+            fetchCharts();
+        }
+
+        async function fetchCharts() {
+            const ticker = document.getElementById('tickerInput').value;
+            const tags = document.getElementById('tagsInput').value;
+            const period = document.getElementById('periodInput').value;
+            const dateStart = document.getElementById('dateStart').value;
+            const dateEnd = document.getElementById('dateEnd').value;
+            const latestOnly = document.getElementById('latestToggle').checked;
+            const tagOperator = document.querySelector('input[name="tagOperator"]:checked').value;
+
+            const params = new URLSearchParams();
+            if (ticker) params.append('ticker', ticker);
+            if (tags) params.append('tags', tags);
+            if (period) params.append('period', period);
+            if (dateStart) params.append('date_start', dateStart);
+            if (dateEnd) params.append('date_end', dateEnd);
+            params.append('latest_per_ticker', latestOnly);
+            params.append('tag_operator', tagOperator);
+
+            try {
+                const response = await fetch(`/api/charts?${params.toString()}`);
+                const charts = await response.json();
+                currentCharts = charts; // Store for navigation
+                renderCharts(charts);
+            } catch (error) {
+                console.error('Error fetching charts:', error);
+            }
+        }
+
+        function renderCharts(charts) {
+            const grid = document.getElementById('chartsGrid');
+            grid.innerHTML = '';
+
+            if (charts.length === 0) {
+                grid.innerHTML = '<div style="color: var(--text-muted); grid-column: 1/-1; text-align: center; padding: 40px;">No charts found matching your criteria.</div>';
+                return;
+            }
+
+            charts.forEach((chart, index) => {
+                const card = document.createElement('div');
+                card.className = 'chart-card';
+
+                const tagsHtml = chart.tags
+                    ? chart.tags.split(',').map(tag => `<span class="tag" onclick="filterByTag('${tag}')">${tag}</span>`).join('')
+                    : '';
+
+                const periodBadge = chart.period && chart.period !== 'Unknown'
+                    ? `<span style="background: var(--accent-primary); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 8px;">${chart.period}</span>`
+                    : '';
+
+                card.innerHTML = `
+                <div class="card-image-container" onclick="openModal(${index})">
+                    <img src="/images/${chart.image_filename}" class="card-image" alt="${chart.ticker} Chart">
+                </div>
+                <div class="card-details">
+                    <div class="card-header">
+                        <span class="ticker">${chart.ticker}</span>
+                        <div style="display: flex; align-items: center;">
+                            <span class="date">${chart.chart_date}</span>
+                            ${periodBadge}
+                        </div>
+                    </div>
+                    <div class="tags-container" id="tags-${chart.id}">
+                        ${tagsHtml}
+                    </div>
+                    <div class="add-tag-form">
+                        <input type="text" class="add-tag-input" placeholder="Add tag..." onkeypress="handleTagInput(event, ${chart.id})">
+                        <button class="add-tag-btn" onclick="addTagFromInput(this, ${chart.id})">+</button>
+                    </div>
+                </div>
+            `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterByTag(tag) {
+            const input = document.getElementById('tagsInput');
+            const currentTags = input.value.split(',').map(t => t.trim()).filter(t => t);
+            if (!currentTags.includes(tag)) {
+                currentTags.push(tag);
+                input.value = currentTags.join(', ');
+                fetchCharts();
+            }
+        }
+
+        async function handleTagInput(event, chartId) {
+            if (event.key === 'Enter') {
+                const input = event.target;
+                await addTag(chartId, input.value);
+                input.value = '';
+            }
+        }
+
+        async function addTagFromInput(btn, chartId) {
+            const input = btn.previousElementSibling;
+            await addTag(chartId, input.value);
+            input.value = '';
+        }
+
+        async function addTag(chartId, tagName) {
+            if (!tagName.trim()) return;
+
+            try {
+                const response = await fetch('/api/tags', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chart_id: chartId, tag_name: tagName.trim() })
+                });
+
+                if (response.ok) {
+                    const tagsContainer = document.getElementById(`tags-${chartId}`);
+                    const newTag = document.createElement('span');
+                    newTag.className = 'tag';
+                    newTag.textContent = tagName.trim();
+                    newTag.onclick = () => filterByTag(tagName.trim());
+                    tagsContainer.appendChild(newTag);
+                }
+            } catch (error) {
+                console.error('Error adding tag:', error);
+            }
+        }
+
+        function openModal(index) {
+            currentChartIndex = index;
+            updateModalImage();
+            document.getElementById('imageModal').classList.add('active');
+        }
+
+        function changeChart(direction, event) {
+            if (event) event.stopPropagation();
+
+            currentChartIndex += direction;
+
+            // Loop around
+            if (currentChartIndex < 0) {
+                currentChartIndex = currentCharts.length - 1;
+            } else if (currentChartIndex >= currentCharts.length) {
+                currentChartIndex = 0;
+            }
+
+            updateModalImage();
+        }
+
+        function updateModalImage() {
+            if (currentCharts.length === 0) return;
+
+            const chart = currentCharts[currentChartIndex];
+            const img = document.getElementById('modalImage');
+            const dateEl = document.getElementById('modalDate');
+
+            img.src = `/images/${chart.image_filename}`;
+            dateEl.textContent = chart.chart_date;
+        }
+
+        function toggleFullScreen(event) {
+            if (event) event.stopPropagation();
+            const img = document.getElementById('modalImage');
+
+            if (!document.fullscreenElement) {
+                if (img.requestFullscreen) {
+                    img.requestFullscreen();
+                } else if (img.webkitRequestFullscreen) { /* Safari */
+                    img.webkitRequestFullscreen();
+                } else if (img.msRequestFullscreen) { /* IE11 */
+                    img.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function closeModal(event) {
+            // Only close if clicking the background or the close button
+            if (event && event.target !== event.currentTarget && !event.target.classList.contains('close-modal')) {
+                return;
+            }
+            document.getElementById('imageModal').classList.remove('active');
+        }    </script>
+
+</body>
+
+</html>
