@@ -24,4 +24,4 @@ Thumbs.db
 *.swp
 
 # Data
-.data/
+data/
