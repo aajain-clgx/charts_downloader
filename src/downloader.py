@@ -33,45 +33,7 @@ def login(page):
     page.wait_for_load_state('domcontentloaded')
     print("Login submitted.")
 
-def crop_chart_image(filepath):
-    """
-    Crops the blue sidebar from the right side of the chart image if present.
-    """
-    try:
-        with Image.open(filepath) as img:
-            width, height = img.size
-            mid_y = height // 2
-            
-            # Check if right edge is the specific dark blue sidebar color
-            right_pixel = img.getpixel((width - 1, mid_y))
-            
-            # Allow for small variations in color just in case
-            if (abs(right_pixel[0] - SIDEBAR_COLOR[0]) < COLOR_TOLERANCE and 
-                abs(right_pixel[1] - SIDEBAR_COLOR[1]) < COLOR_TOLERANCE and 
-                abs(right_pixel[2] - SIDEBAR_COLOR[2]) < COLOR_TOLERANCE):
-                
-                print("Detected blue sidebar. Cropping...")
-                
-                # Find the transition point (scan up to 200px)
-                crop_x = width
-                for i in range(200):
-                    x = width - 1 - i
-                    pixel = img.getpixel((x, mid_y))
-                    # Check if pixel is NOT the blue color
-                    if (abs(pixel[0] - SIDEBAR_COLOR[0]) > COLOR_TOLERANCE or 
-                        abs(pixel[1] - SIDEBAR_COLOR[1]) > COLOR_TOLERANCE or 
-                        abs(pixel[2] - SIDEBAR_COLOR[2]) > COLOR_TOLERANCE):
-                        crop_x = x + 1 # Crop just after the non-blue pixel
-                        break
-                
-                if crop_x < width:
-                    img = img.crop((0, 0, crop_x, height))
-                    img.save(filepath)
-                    print(f"Cropped image to width {crop_x}")
-                    return True
-    except Exception as e:
-        print(f"Error post-processing image: {e}")
-    return False
+
 
 def process_url(page, url):
     print(f"Processing {url}...")
@@ -93,9 +55,8 @@ def process_url(page, url):
     # For now, current date is safer for "when we downloaded it"
     chart_date = datetime.now().strftime("%Y-%m-%d")
     
-    if db.chart_exists(ticker, chart_date):
-        print(f"Chart for {ticker} on {chart_date} already exists. Skipping.")
-        return
+    # Check for existence moved to after period extraction
+
     
     # Find Chart Image
     # The main chart is usually an img tag with class 'chartimg' or inside a specific div
@@ -126,12 +87,29 @@ def process_url(page, url):
             print(f"Could not detect period: {e}")
             period = "Unknown"
 
-        chart_element.screenshot(path=filepath)
-        
-        # Post-process: Remove blue sidebar if present
-        crop_chart_image(filepath)
+        if db.chart_exists(ticker, chart_date, period):
+            print(f"Chart for {ticker} on {chart_date} with period '{period}' already exists. Skipping.")
+            return
 
-        print(f"Saved chart to {filepath}")
+        # Download image via context menu to avoid blue border
+        try:
+            with page.expect_download(timeout=30000) as download_info:
+                # Right click the chart to show context menu
+                chart_element.click(button="right")
+                
+                # Wait for the menu option to appear and click it
+                # The menu is likely a custom JS menu given the icons in the user's screenshot
+                page.get_by_text("Download Chart Image", exact=True).click()
+            
+            download = download_info.value
+            download.save_as(filepath)
+            print(f"Downloaded chart via context menu to {filepath}")
+
+        except Exception as e:
+            print(f"Failed to download via context menu: {e}")
+            print("Falling back to screenshot (may include blue border)...")
+            chart_element.screenshot(path=filepath)
+            print(f"Saved screenshot to {filepath}")
         
         # Save to DB
         db.add_chart(ticker, chart_date, filename, url, period)

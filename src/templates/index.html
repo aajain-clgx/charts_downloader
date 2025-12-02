@@ -260,6 +260,26 @@
             color: #fff;
         }
 
+        .tag-delete {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            margin-left: 4px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.2);
+            font-size: 10px;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.2s, background-color 0.2s;
+        }
+
+        .tag-delete:hover {
+            opacity: 1;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
         .add-tag-form {
             display: flex;
             gap: 5px;
@@ -503,11 +523,11 @@
                     style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 6px; font-family: inherit; font-size: 0.9rem; outline: none; width: 100%;">
                     <option value="">All Periods</option>
                     <option value="1 min">1 Min</option>
-                    <option value="Daily">Daily</option>
-                    <option value="Weekly">Weekly</option>
-                    <option value="Monthly">Monthly</option>
-                    <option value="10 Min">10 Min</option>
-                    <option value="60 Min">60 Min</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="10 min">10 Min</option>
+                    <option value="60 min">60 Min</option>
                 </select>
             </div>
 
@@ -623,7 +643,12 @@
                 card.className = 'chart-card';
 
                 const tagsHtml = chart.tags
-                    ? chart.tags.split(',').map(tag => `<span class="tag" onclick="filterByTag('${tag}')">${tag}</span>`).join('')
+                    ? chart.tags.split(',').map(tag => `
+                        <span class="tag" onclick="filterByTag('${tag}')">
+                            ${tag}
+                            <span class="tag-delete" onclick="deleteTag(${chart.id}, '${tag}', event)">×</span>
+                        </span>
+                    `).join('')
                     : '';
 
                 const periodBadge = chart.period && chart.period !== 'Unknown'
@@ -693,12 +718,43 @@
                     const tagsContainer = document.getElementById(`tags-${chartId}`);
                     const newTag = document.createElement('span');
                     newTag.className = 'tag';
-                    newTag.textContent = tagName.trim();
+                    newTag.innerHTML = `
+                        ${tagName.trim()}
+                        <span class="tag-delete" onclick="deleteTag(${chartId}, '${tagName.trim()}', event)">×</span>
+                    `;
                     newTag.onclick = () => filterByTag(tagName.trim());
                     tagsContainer.appendChild(newTag);
                 }
             } catch (error) {
                 console.error('Error adding tag:', error);
+            }
+        }
+
+        async function deleteTag(chartId, tagName, event) {
+            if (event) event.stopPropagation();
+
+            if (!confirm(`Are you sure you want to delete the tag "${tagName}"?`)) return;
+
+            try {
+                const response = await fetch('/api/tags', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chart_id: chartId, tag_name: tagName })
+                });
+
+                if (response.ok) {
+                    // Remove the tag element from the DOM
+                    const tagsContainer = document.getElementById(`tags-${chartId}`);
+                    const tagElements = tagsContainer.getElementsByClassName('tag');
+                    for (let el of tagElements) {
+                        if (el.innerText.includes(tagName)) {
+                            el.remove();
+                            break;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error deleting tag:', error);
             }
         }
 

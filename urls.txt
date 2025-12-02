@@ -8,3 +8,13 @@ https://stockcharts.com/sc3/ui/?s=NVDA&a=2129234380&p=1&b=1&g=0&id=p80152667531
 https://stockcharts.com/sc3/ui/?s=SLV&a=2129234385&p=1&b=1&g=0&id=p80152667531
 https://stockcharts.com/sc3/ui/?s=SMH&a=2129234388&p=1&b=1&g=0&id=p80152667531
 https://stockcharts.com/sc3/ui/?s=TSLA&a=2129234382&p=1&b=1&g=0&id=p80152667531
+https://stockcharts.com/sc3/ui/?s=GDX&a=2132291293&p=10&yr=0&mn=0&dy=7&id=p58230637098
+https://stockcharts.com/sc3/ui/?s=GLD&a=2132291303&p=10&yr=0&mn=0&dy=7&id=p58230637098
+https://stockcharts.com/sc3/ui/?s=GOOGL&a=2132291340&p=10&yr=0&mn=0&dy=7&id=p58230637098
+https://stockcharts.com/sc3/ui/?s=NVDA&a=2132291438&p=10&yr=0&mn=0&dy=7&id=p58230637098
+https://stockcharts.com/sc3/ui/?s=QQQ&a=2132291444&p=10&yr=0&mn=0&dy=7&id=p58230637098
+https://stockcharts.com/sc3/ui/?s=SLV&a=2132291445&p=10&yr=0&mn=0&dy=7&id=p58230637098
+https://stockcharts.com/sc3/ui/?s=SMH&a=2132291447&p=10&yr=0&mn=0&dy=7&id=p58230637098
+https://stockcharts.com/sc3/ui/?s=SPY&a=2132291448&p=10&yr=0&mn=0&dy=7&id=p58230637098
+https://stockcharts.com/sc3/ui/?s=VXX&a=2132291453&p=10&yr=0&mn=0&dy=7&id=p58230637098
+https://stockcharts.com/sc3/ui/?s=TSLA&a=2132291450&p=10&yr=0&mn=0&dy=7&id=p58230637098

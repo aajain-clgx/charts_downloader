@@ -36,6 +36,13 @@ def init_db():
             UNIQUE(chart_id, tag_name)
         )
     ''')
+
+    # Create indexes
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_charts_ticker ON charts(ticker)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_charts_date ON charts(chart_date)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_charts_period ON charts(period)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_tags_chart_id ON tags(chart_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_tags_tag_name ON tags(tag_name)')
     
     conn.commit()
     conn.close()
@@ -64,10 +71,20 @@ def add_tag(chart_id, tag_name):
     finally:
         conn.close()
 
-def chart_exists(ticker, chart_date):
+def remove_tag(chart_id, tag_name):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT 1 FROM charts WHERE ticker = ? AND chart_date = ?', (ticker, chart_date))
+    cursor.execute('DELETE FROM tags WHERE chart_id = ? AND tag_name = ?', (chart_id, tag_name))
+    conn.commit()
+    conn.close()
+
+def chart_exists(ticker, chart_date, period=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    if period:
+        cursor.execute('SELECT 1 FROM charts WHERE ticker = ? AND chart_date = ? AND period = ?', (ticker, chart_date, period))
+    else:
+        cursor.execute('SELECT 1 FROM charts WHERE ticker = ? AND chart_date = ?', (ticker, chart_date))
     exists = cursor.fetchone() is not None
     conn.close()
     return exists
@@ -88,7 +105,7 @@ def get_charts(ticker=None, date_start=None, date_end=None, tags=None, latest_pe
     
     # Filter by period
     if period:
-        conditions.append("c.period = ?")
+        conditions.append("UPPER(c.period) = UPPER(?)")
         params.append(period)
     
     # Filter by date range
@@ -124,24 +141,22 @@ def get_charts(ticker=None, date_start=None, date_end=None, tags=None, latest_pe
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
         
-    # Grouping and Ordering
+    # Grouping
     query += " GROUP BY c.id"
     
-    # If latest_per_ticker is True, we need to filter the results in Python or use a complex query.
-    # A complex query is more efficient but harder to maintain with dynamic filters.
-    # Given the scale is likely small, we can fetch and filter, OR use a window function approach if SQLite supports it (it does in newer versions).
-    # Let's try a SQL approach using MAX(id) per ticker.
-    
     if latest_per_ticker:
-        # Wrap the previous query or modify it. 
-        # Actually, simpler approach:
-        # 1. Build the WHERE clause as above.
-        # 2. If latest_per_ticker, add a condition that c.id must be the MAX(id) for that ticker *within the filtered set*.
-        # That's hard.
-        # Alternative: Filter in Python. It's safer and easier given the complexity.
-        pass
+        # Use Window Function to filter for latest per ticker/period efficiently in SQL
+        # Wrap the existing query as a subquery
+        query = f"""
+            SELECT * FROM (
+                SELECT sub.*, 
+                       ROW_NUMBER() OVER (PARTITION BY sub.ticker, sub.period ORDER BY sub.chart_date DESC, sub.id DESC) as rn
+                FROM ({query}) sub
+            )
+            WHERE rn = 1
+        """
 
-    query += " ORDER BY c.chart_date DESC, c.id DESC"
+    query += " ORDER BY chart_date DESC, id DESC"
 
     cursor.execute(query, params)
     rows = cursor.fetchall()
@@ -149,15 +164,7 @@ def get_charts(ticker=None, date_start=None, date_end=None, tags=None, latest_pe
     
     results = [dict(row) for row in rows]
     
-    if latest_per_ticker:
-        # Filter to keep only the first occurrence of each ticker (since we ordered by date DESC)
-        seen_tickers = set()
-        unique_results = []
-        for row in results:
-            if row['ticker'] not in seen_tickers:
-                seen_tickers.add(row['ticker'])
-                unique_results.append(row)
-        return unique_results
+    # Python-side filtering is no longer needed for latest_per_ticker
         
     return results
 

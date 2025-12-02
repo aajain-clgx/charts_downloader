@@ -41,5 +41,17 @@ def api_add_tag():
     db.add_tag(chart_id, tag_name)
     return jsonify({'success': True})
 
+@app.route('/api/tags', methods=['DELETE'])
+def api_remove_tag():
+    data = request.json
+    chart_id = data.get('chart_id')
+    tag_name = data.get('tag_name')
+    
+    if not chart_id or not tag_name:
+        return jsonify({'error': 'Missing chart_id or tag_name'}), 400
+        
+    db.remove_tag(chart_id, tag_name)
+    return jsonify({'success': True})
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
