@@ -53,5 +53,10 @@ def api_remove_tag():
     db.remove_tag(chart_id, tag_name)
     return jsonify({'success': True})
 
+@app.route('/api/tags/cloud')
+def api_tags_cloud():
+    tags = db.get_all_tags()
+    return jsonify(tags)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

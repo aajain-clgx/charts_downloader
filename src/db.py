@@ -168,5 +168,13 @@ def get_charts(ticker=None, date_start=None, date_end=None, tags=None, latest_pe
         
     return results
 
+def get_all_tags():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT tag_name, COUNT(*) as count FROM tags GROUP BY tag_name ORDER BY count DESC')
+    tags = cursor.fetchall()
+    conn.close()
+    return [dict(tag) for tag in tags]
+
 if __name__ == '__main__':
     init_db()

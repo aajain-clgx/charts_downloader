@@ -474,6 +474,30 @@
         input[type="checkbox"] {
             display: none;
         }
+
+        /* Tag Cloud */
+        .tag-cloud-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            max-width: 800px;
+        }
+
+        .cloud-tag {
+            cursor: pointer;
+            transition: color 0.2s, transform 0.2s;
+            color: var(--text-muted);
+            line-height: 1;
+            user-select: none;
+        }
+
+        .cloud-tag:hover {
+            color: var(--accent-primary);
+            transform: scale(1.1);
+        }
     </style>
 </head>
 
@@ -515,6 +539,8 @@
                             style="display: block;"> All
                     </label>
                 </div>
+                <button class="btn btn-secondary" onclick="openTagCloud()"
+                    style="margin-top: 10px; width: 100%; font-size: 0.8rem; padding: 6px;">View Tag Cloud</button>
             </div>
 
             <div class="filter-group">
@@ -562,6 +588,18 @@
             <div id="modalDate" class="modal-date"></div>
         </div>
         <button class="modal-nav-btn next-btn" onclick="changeChart(1, event)">&#10095;</button>
+    </div>
+
+    <div id="tagCloudModal" class="modal" onclick="closeTagCloud(event)">
+        <div class="modal-wrapper"
+            style="background: var(--card-bg); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); position: relative; width: auto; max-width: 90%;">
+            <span class="close-modal" onclick="closeTagCloud(event)"
+                style="top: 10px; right: 15px; font-size: 1.5rem; position: absolute;">&times;</span>
+            <h2 style="margin-bottom: 20px; color: var(--text-main); text-align: center;">Tag Cloud</h2>
+            <div id="tagCloudContent" class="tag-cloud-container">
+                <!-- Tags injected here -->
+            </div>
+        </div>
     </div>
 
     <script>
@@ -805,8 +843,76 @@
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
                 }
             }
+        }
+
+        async function openTagCloud() {
+            const modal = document.getElementById('tagCloudModal');
+            const content = document.getElementById('tagCloudContent');
+            content.innerHTML = '<div style="color: var(--text-muted);">Loading...</div>';
+            modal.classList.add('active');
+
+            try {
+                const response = await fetch('/api/tags/cloud');
+                const tags = await response.json();
+                renderTagCloud(tags);
+            } catch (error) {
+                console.error('Error fetching tag cloud:', error);
+                content.innerHTML = '<div style="color: red;">Error loading tags.</div>';
+            }
+        }
+
+        function closeTagCloud(event) {
+            if (event) event.stopPropagation();
+            // Check if clicked element is the modal background or the close button
+            if (event.target === document.getElementById('tagCloudModal') || event.target.classList.contains('close-modal')) {
+                document.getElementById('tagCloudModal').classList.remove('active');
+            }
+        }
+
+        function renderTagCloud(tags) {
+            const content = document.getElementById('tagCloudContent');
+            content.innerHTML = '';
+
+            if (tags.length === 0) {
+                content.innerHTML = '<div style="color: var(--text-muted);">No tags found.</div>';
+                return;
+            }
+
+            // Find min and max counts for scaling
+            const maxCount = Math.max(...tags.map(t => t.count));
+            const minCount = Math.min(...tags.map(t => t.count));
+
+            // Font size range (rem)
+            const minSize = 0.8;
+            const maxSize = 2.5;
+
+            tags.forEach(tag => {
+                let size;
+                if (maxCount === minCount) {
+                    size = (minSize + maxSize) / 2;
+                } else {
+                    size = minSize + (tag.count - minCount) * (maxSize - minSize) / (maxCount - minCount);
+                }
+
+                const span = document.createElement('span');
+                span.className = 'cloud-tag';
+                span.style.fontSize = `${size}rem`;
+                span.textContent = `${tag.tag_name} (${tag.count})`;
+                span.onclick = () => selectTagFromCloud(tag.tag_name);
+                content.appendChild(span);
+            });
+        }
+
+        function selectTagFromCloud(tagName) {
+            document.getElementById('tagsInput').value = tagName;
+            document.getElementById('tagCloudModal').classList.remove('active');
+            fetchCharts();
         }
 
         function closeModal(event) {
